@@ -1,0 +1,7 @@
+config:
+  aws:region: us-east-1
+  deploy-buho-docs:containerPort: "80"
+  deploy-buho-docs:cpu: "512"
+  deploy-buho-docs:memory: "128"
+  deploy-buho-docs:dbPassword:
+    secure: AAABAPg9+TMLepqxnd9wxmIrUJLydbpMfnhi5KlBKR7plgWchiMmq5ML72yAPmIz

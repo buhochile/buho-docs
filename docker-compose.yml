@@ -22,7 +22,7 @@ services:
     environment:
       POSTGRES_DB: docmost
       POSTGRES_USER: docmost
-      POSTGRES_PASSWORD: STRONG_DB_PASSWORD
+      POSTGRES_PASSWORD: Wm5-6Q9FRURDNTEL
     restart: unless-stopped
     volumes:
       - db_data:/var/lib/postgresql/data
