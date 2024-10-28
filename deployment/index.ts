@@ -1,48 +1,33 @@
 import * as pulumi from "@pulumi/pulumi"
 import * as aws from "@pulumi/aws"
 import * as awsx from "@pulumi/awsx"
+import { configureNetwork } from "./configureNetwork"
 
 const config = new pulumi.Config()
 const containerPort = config.getNumber("containerPort") || 80
 const cpu = config.getNumber("cpu") || 512
 const memory = config.getNumber("memory") || 128
 
+const stack = pulumi.getStack()
+
 // Database configuration
+
 const dbName = "docmost"
 const dbUser = "docmost"
 const dbPassword = config.requireSecret("dbPassword")
 const dbPort = 5432
 const appSecret = config.requireSecret("appSecret")
 
-// Create a VPC
-const vpc = new awsx.ec2.Vpc("vpc", {
-  numberOfAvailabilityZones: 2,
-  natGateways: {
-    strategy: "None", // Changed from "Single" to "None"
-  },
-})
+// Configure
 
-// Create a security group for the database
-const dbSecurityGroup = new aws.ec2.SecurityGroup("db-securitygroup", {
-  vpcId: vpc.vpcId,
-  ingress: [
-    {
-      protocol: "tcp",
-      fromPort: dbPort,
-      toPort: dbPort,
-      cidrBlocks: [vpc.vpc.cidrBlock], // Only allow access from within the VPC
-    },
-  ],
-  egress: [
-    {
-      // Add egress rule
-      protocol: "-1",
-      fromPort: 0,
-      toPort: 0,
-      cidrBlocks: ["0.0.0.0/0"],
-    },
-  ],
-})
+const {
+  vpc,
+  dbSecurityGroup,
+  redisSecurityGroup,
+  docsAppSg,
+  lb,
+  redisSubnetGroup,
+} = configureNetwork({ stack, dbPort })
 
 // Create an RDS instance
 const database = new aws.rds.Instance("postgres", {
@@ -60,34 +45,6 @@ const database = new aws.rds.Instance("postgres", {
   }).name,
 })
 
-// Create ElastiCache (Redis) security group
-const redisSecurityGroup = new aws.ec2.SecurityGroup("redis-securitygroup", {
-  vpcId: vpc.vpcId,
-  ingress: [
-    {
-      protocol: "tcp",
-      fromPort: 6379,
-      toPort: 6379,
-      cidrBlocks: [vpc.vpc.cidrBlock], // Only allow access from within the VPC
-    },
-  ],
-  egress: [
-    {
-      // Add egress rule
-      protocol: "-1",
-      fromPort: 0,
-      toPort: 0,
-      cidrBlocks: ["0.0.0.0/0"],
-    },
-  ],
-})
-
-// Create ElastiCache subnet group
-const redisSubnetGroup = new aws.elasticache.SubnetGroup("redis-subnet-group", {
-  name: "cache-buho-docs",
-  subnetIds: vpc.privateSubnetIds,
-})
-
 // Create Redis cluster
 const redis = new aws.elasticache.Cluster("redis", {
   clusterId: "redis-buho-docs",
@@ -102,44 +59,6 @@ const redis = new aws.elasticache.Cluster("redis", {
 // An ECS cluster to deploy into
 const cluster = new aws.ecs.Cluster("cluster", {})
 
-// Add a security group for the ECS tasks
-const ecsSecurityGroup = new aws.ec2.SecurityGroup("ecs-securitygroup", {
-  vpcId: vpc.vpcId,
-  ingress: [
-    {
-      protocol: "tcp",
-      fromPort: 3000,
-      toPort: 3000,
-      cidrBlocks: ["0.0.0.0/0"],
-    },
-  ],
-  egress: [
-    {
-      protocol: "-1",
-      fromPort: 0,
-      toPort: 0,
-      cidrBlocks: ["0.0.0.0/0"],
-    },
-  ],
-})
-
-// An ALB to serve the container endpoint to the internet
-const loadbalancer = new awsx.lb.ApplicationLoadBalancer(`loadbalancer`, {
-  subnetIds: vpc.publicSubnetIds,
-  defaultTargetGroup: {
-    vpcId: vpc.vpcId,
-    port: 3000,
-    healthCheck: {
-      path: "/health",
-      interval: 30,
-      timeout: 15,
-      healthyThreshold: 2,
-      unhealthyThreshold: 2,
-    },
-  },
-  securityGroups: [ecsSecurityGroup.id],
-})
-
 // An ECR repository to store our application's container image
 const repo = new awsx.ecr.Repository("repo", {
   forceDelete: true,
@@ -153,11 +72,11 @@ const image = new awsx.ecr.Image("image", {
 })
 
 // Deploy an ECS Service on Fargate to host the application container
-const service = new awsx.ecs.FargateService("service", {
+const service = new awsx.ecs.FargateService("docs-app-service", {
   cluster: cluster.arn,
   taskDefinitionArgs: {
     container: {
-      name: "app",
+      name: `docs-app-${stack}`,
       image: image.imageUri,
       cpu: cpu,
       memory: memory,
@@ -165,7 +84,7 @@ const service = new awsx.ecs.FargateService("service", {
       portMappings: [
         {
           containerPort: 3000,
-          targetGroup: loadbalancer.defaultTargetGroup,
+          targetGroup: lb.defaultTargetGroup,
         },
       ],
       environment: [
@@ -184,7 +103,7 @@ const service = new awsx.ecs.FargateService("service", {
         // Add new environment variables
         {
           name: "APP_URL",
-          value: pulumi.interpolate`http://${loadbalancer.loadBalancer.dnsName}`,
+          value: pulumi.interpolate`http://${lb.loadBalancer.dnsName}`,
         },
         {
           name: "PORT",
@@ -220,11 +139,31 @@ const service = new awsx.ecs.FargateService("service", {
   networkConfiguration: {
     subnets: vpc.privateSubnetIds,
     assignPublicIp: true,
-    securityGroups: [ecsSecurityGroup.id],
   },
 })
 
+// Create ECS security group first, then update the security groups array
+const ecsSecurityGroup = new aws.ec2.SecurityGroup("ecs-securitygroup", {
+  vpcId: vpc.vpcId,
+  ingress: [
+    {
+      protocol: "tcp",
+      fromPort: 3000,
+      toPort: 3000,
+      securityGroups: [docsAppSg.id], // Allow traffic from ALB security group
+    },
+  ],
+  egress: [
+    {
+      protocol: "-1",
+      fromPort: 0,
+      toPort: 0,
+      cidrBlocks: ["0.0.0.0/0"],
+    },
+  ],
+})
+
 // Export the necessary connection information
-export const url = pulumi.interpolate`http://${loadbalancer.loadBalancer.dnsName}`
+export const url = pulumi.interpolate`http://${lb.loadBalancer.dnsName}`
 export const databaseEndpoint = database.endpoint
 export const redisEndpoint = pulumi.interpolate`${redis.cacheNodes[0].address}:${redis.port}`

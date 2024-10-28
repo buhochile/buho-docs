@@ -5,3 +5,5 @@ config:
   deploy-buho-docs:memory: "128"
   deploy-buho-docs:dbPassword:
     secure: AAABAPg9+TMLepqxnd9wxmIrUJLydbpMfnhi5KlBKR7plgWchiMmq5ML72yAPmIz
+  deploy-buho-docs:appSecret:
+    secure: AAABAEXaaSWpS5goYnZlWtVztE6lvD8UPjI6jlKJ7XRNtuVlvMeyDnMfukmCCZ6mgUcYqb34yJ3Y1lLcm5GJqvxxkbe12Cntb5Q6zw==
