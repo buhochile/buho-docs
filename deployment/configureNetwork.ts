@@ -13,7 +13,7 @@ export function configureNetwork({ stack, dbPort }: Props) {
     numberOfAvailabilityZones: 2,
     enableDnsHostnames: true,
     natGateways: {
-      strategy: "None",
+      strategy: "Single",
     },
   })
 
