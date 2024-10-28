@@ -139,29 +139,11 @@ const service = new awsx.ecs.FargateService("docs-app-service", {
   networkConfiguration: {
     subnets: vpc.privateSubnetIds,
     assignPublicIp: true,
+    securityGroups: [docsAppSg.id],
   },
 })
 
-// Create ECS security group first, then update the security groups array
-const ecsSecurityGroup = new aws.ec2.SecurityGroup("ecs-securitygroup", {
-  vpcId: vpc.vpcId,
-  ingress: [
-    {
-      protocol: "tcp",
-      fromPort: 3000,
-      toPort: 3000,
-      securityGroups: [docsAppSg.id], // Allow traffic from ALB security group
-    },
-  ],
-  egress: [
-    {
-      protocol: "-1",
-      fromPort: 0,
-      toPort: 0,
-      cidrBlocks: ["0.0.0.0/0"],
-    },
-  ],
-})
+
 
 // Export the necessary connection information
 export const url = pulumi.interpolate`http://${lb.loadBalancer.dnsName}`
