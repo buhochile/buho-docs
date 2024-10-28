@@ -36,7 +36,6 @@ export function AppHeader() {
           {!isHomeRoute && (
             <>
               <Tooltip label="Sidebar toggle">
-
                 <SidebarToggle
                   aria-label="Sidebar toggle"
                   opened={mobileOpened}
@@ -61,11 +60,11 @@ export function AppHeader() {
           <Text
             size="lg"
             fw={600}
-            style={{cursor: "pointer", userSelect: "none"}}
+            style={{ cursor: "pointer", userSelect: "none" }}
             component={Link}
             to="/home"
           >
-            Docmost
+            Buho Docs
           </Text>
 
           <Group ml={50} gap={5} className={classes.links} visibleFrom="sm">
@@ -74,9 +73,9 @@ export function AppHeader() {
         </Group>
 
         <Group px={"xl"}>
-          <TopMenu/>
+          <TopMenu />
         </Group>
       </Group>
     </>
-  );
+  )
 }

@@ -13,7 +13,7 @@ export default function SpaceHomeTabs() {
       <Tabs.List>
         <Tabs.Tab value="recent" leftSection={<IconClockHour3 size={18} />}>
           <Text size="sm" fw={500}>
-            Recently updated
+            Actualizados recientemente
           </Text>
         </Tabs.Tab>
       </Tabs.List>
@@ -24,5 +24,5 @@ export default function SpaceHomeTabs() {
         {space?.id && <RecentChanges spaceId={space.id} />}
       </Tabs.Panel>
     </Tabs>
-  );
+  )
 }
