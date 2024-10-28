@@ -12,6 +12,9 @@ export function configureNetwork({ stack, dbPort }: Props) {
     cidrBlock: "10.0.0.0/16",
     numberOfAvailabilityZones: 2,
     enableDnsHostnames: true,
+    natGateways: {
+      strategy: "None",
+    },
   })
 
   const dbSecurityGroup = new aws.ec2.SecurityGroup("db-securitygroup", {
