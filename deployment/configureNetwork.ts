@@ -1,4 +1,3 @@
-import * as pulumi from "@pulumi/pulumi"
 import * as aws from "@pulumi/aws"
 import * as awsx from "@pulumi/awsx"
 
@@ -19,6 +18,7 @@ export function configureNetwork({ stack, dbPort }: Props) {
 
   const dbSecurityGroup = new aws.ec2.SecurityGroup("db-securitygroup", {
     vpcId: vpc.vpcId,
+
     ingress: [
       {
         protocol: "tcp",
@@ -77,6 +77,12 @@ export function configureNetwork({ stack, dbPort }: Props) {
         cidrBlocks: ["0.0.0.0/0"],
       },
       { protocol: "tcp", fromPort: 80, toPort: 80, cidrBlocks: ["0.0.0.0/0"] },
+      {
+        protocol: "tcp",
+        fromPort: 443,
+        toPort: 443,
+        cidrBlocks: ["0.0.0.0/0"],
+      },
     ],
     egress: [
       { protocol: "-1", fromPort: 0, toPort: 0, cidrBlocks: ["0.0.0.0/0"] },

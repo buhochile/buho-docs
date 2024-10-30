@@ -1,9 +1,9 @@
 config:
   aws:region: us-east-1
-  deploy-buho-docs:containerPort: "80"
+  deploy-buho-docs:containerPort: "3000"
   deploy-buho-docs:cpu: "512"
   deploy-buho-docs:memory: "128"
-  deploy-buho-docs:dbPassword:
-    secure: AAABAPg9+TMLepqxnd9wxmIrUJLydbpMfnhi5KlBKR7plgWchiMmq5ML72yAPmIz
   deploy-buho-docs:appSecret:
-    secure: AAABAEXaaSWpS5goYnZlWtVztE6lvD8UPjI6jlKJ7XRNtuVlvMeyDnMfukmCCZ6mgUcYqb34yJ3Y1lLcm5GJqvxxkbe12Cntb5Q6zw==
+    secure: AAABAK69HMpPqsA2VhIMgujE/w670ujEjYRRxjS9S1+L8XnI+9zl9+VSWyDXqvEuiYW0ciQCv2js72iABEoLlz35iWSbS5NhexMVfA==
+  deploy-buho-docs:dbPassword:
+    secure: AAABAPKk4/Uyqe0+1nOIDTWN9UZljL8gFuaLDvGN7qJHqfcnh31lZ9x1b0o7DWB+
