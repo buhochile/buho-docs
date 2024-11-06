@@ -3,7 +3,7 @@ config:
   deploy-buho-docs:containerPort: "3000"
   deploy-buho-docs:cpu: "512"
   deploy-buho-docs:memory: "128"
-  deploy-buho-docs:appSecret:
-    secure: AAABAK69HMpPqsA2VhIMgujE/w670ujEjYRRxjS9S1+L8XnI+9zl9+VSWyDXqvEuiYW0ciQCv2js72iABEoLlz35iWSbS5NhexMVfA==
   deploy-buho-docs:dbPassword:
-    secure: AAABAPKk4/Uyqe0+1nOIDTWN9UZljL8gFuaLDvGN7qJHqfcnh31lZ9x1b0o7DWB+
+    secure: AAABAO9BwaPRJziOmLnYbg6AgC0hYB+kYClForEp5wFeIlj0FhQmApXNLWDa1Otf
+  deploy-buho-docs:appSecret:
+    secure: AAABAN5PkiPiEPT86hG7IxPYLXX8qK1dxtTpejzCLqOI4sWTEao1MV7SVoBV34Lo7dKZ/gGeGv2DobPnoJlQ2zDn5xbNgYbGfzqu5g==

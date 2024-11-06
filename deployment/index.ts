@@ -4,7 +4,7 @@ import * as awsx from "@pulumi/awsx"
 import { configureNetwork } from "./configureNetwork"
 
 const config = new pulumi.Config()
-const containerPort = config.getNumber("containerPort") || 80
+const containerPort = config.getNumber("containerPort") || 3000
 const cpu = config.getNumber("cpu") || 512
 const memory = config.getNumber("memory") || 128
 
@@ -27,10 +27,12 @@ const {
   docsAppSg,
   lb,
   redisSubnetGroup,
+  dbSubnetGroup,
+  appTargetGroup,
 } = configureNetwork({ stack, dbPort })
 
 // Create an RDS instance
-const database = new aws.rds.Instance("postgres", {
+const database = new aws.rds.Instance(`buho-docs-postgres-${stack}`, {
   engine: "postgres",
   engineVersion: "16.1",
   instanceClass: "db.t3.micro",
@@ -40,13 +42,11 @@ const database = new aws.rds.Instance("postgres", {
   password: dbPassword,
   skipFinalSnapshot: true,
   vpcSecurityGroupIds: [dbSecurityGroup.id],
-  dbSubnetGroupName: new aws.rds.SubnetGroup("database-subnet-group", {
-    subnetIds: vpc.privateSubnetIds,
-  }).name,
+  dbSubnetGroupName: dbSubnetGroup.name,
 })
 
 // Create Redis cluster
-const redis = new aws.elasticache.Cluster("redis", {
+const redis = new aws.elasticache.Cluster(`buho-docs-redis-${stack}`, {
   clusterId: "redis-buho-docs",
   engine: "redis",
   nodeType: "cache.t3.micro",
@@ -56,23 +56,22 @@ const redis = new aws.elasticache.Cluster("redis", {
   subnetGroupName: redisSubnetGroup.name,
 })
 
-// An ECS cluster to deploy into
-const cluster = new aws.ecs.Cluster("cluster", {})
-
 // An ECR repository to store our application's container image
-const repo = new awsx.ecr.Repository("repo", {
+const repo = new awsx.ecr.Repository(`buho-docs-${stack}-repo`, {
   forceDelete: true,
 })
 
-// Build and publish our application's container image 
-const image = new awsx.ecr.Image("image", {
+// Build and publish our application's container image
+const image = new awsx.ecr.Image(`buho-docs-${stack}-image`, {
   repositoryUrl: repo.url,
   context: "../",
   platform: "linux/amd64",
 })
 
+// An ECS cluster to deploy into
+const cluster = new aws.ecs.Cluster(`buho-docs-${stack}-cluster`, {})
 // Deploy an ECS Service on Fargate to host the application container
-const service = new awsx.ecs.FargateService("docs-app-service", {
+const service = new awsx.ecs.FargateService(`buho-docs-${stack}-service`, {
   cluster: cluster.arn,
   taskDefinitionArgs: {
     container: {
@@ -84,7 +83,7 @@ const service = new awsx.ecs.FargateService("docs-app-service", {
       portMappings: [
         {
           containerPort: 3000,
-          targetGroup: lb.defaultTargetGroup,
+          targetGroup: appTargetGroup,
         },
       ],
       environment: [
@@ -107,7 +106,7 @@ const service = new awsx.ecs.FargateService("docs-app-service", {
         },
         {
           name: "PORT",
-          value: containerPort.toString(),
+          value: "3000",
         },
         {
           name: "JWT_TOKEN_EXPIRES_IN",
@@ -137,8 +136,8 @@ const service = new awsx.ecs.FargateService("docs-app-service", {
     },
   },
   networkConfiguration: {
-    subnets: vpc.privateSubnetIds,
-    assignPublicIp: false,
+    subnets: vpc.publicSubnetIds,
+    assignPublicIp: true,
     securityGroups: [docsAppSg.id],
   },
 })
