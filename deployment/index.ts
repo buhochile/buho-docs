@@ -1,6 +1,6 @@
-import * as pulumi from "@pulumi/pulumi"
 import * as aws from "@pulumi/aws"
 import * as awsx from "@pulumi/awsx"
+import * as pulumi from "@pulumi/pulumi"
 import { configureNetwork } from "./configureNetwork"
 
 const config = new pulumi.Config()
@@ -26,6 +26,7 @@ const {
   redisSecurityGroup,
   docsAppSg,
   lb,
+  lbSg,
   redisSubnetGroup,
   dbSubnetGroup,
   appTargetGroup,
@@ -83,6 +84,7 @@ const service = new awsx.ecs.FargateService(`buho-docs-${stack}-service`, {
       portMappings: [
         {
           containerPort: 3000,
+          hostPort: 3000,
           targetGroup: appTargetGroup,
         },
       ],
@@ -138,11 +140,9 @@ const service = new awsx.ecs.FargateService(`buho-docs-${stack}-service`, {
   networkConfiguration: {
     subnets: vpc.publicSubnetIds,
     assignPublicIp: true,
-    securityGroups: [docsAppSg.id],
+    securityGroups: [docsAppSg.id, lbSg.id],
   },
 })
-
-
 
 // Export the necessary connection information
 export const url = pulumi.interpolate`http://${lb.loadBalancer.dnsName}`

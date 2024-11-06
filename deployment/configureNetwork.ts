@@ -119,8 +119,9 @@ export function configureNetwork({ stack, dbPort }: Props) {
   })
 
   const appTargetGroup = new aws.lb.TargetGroup(`buho-docs-app-tg`, {
-    port: 443,
-    protocol: "HTTPS",
+    port: 3000,
+    protocol: "HTTP",
+    targetType: "ip",
     vpcId: vpc.vpcId,
     healthCheck: {
       path: "/api/health",
@@ -185,6 +186,7 @@ export function configureNetwork({ stack, dbPort }: Props) {
     redisSubnetGroup,
     docsAppSg,
     lb,
+    lbSg,
     appTargetGroup,
   }
 }
