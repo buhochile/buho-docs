@@ -104,7 +104,7 @@ const service = new awsx.ecs.FargateService(`buho-docs-${stack}-service`, {
         // Add new environment variables
         {
           name: "APP_URL",
-          value: pulumi.interpolate`http://${lb.loadBalancer.dnsName}`,
+          value: "docs.buhochile.com",
         },
         {
           name: "PORT",
