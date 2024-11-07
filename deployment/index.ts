@@ -19,7 +19,7 @@ const dbPassword = config.requireSecret("dbPassword")
 const dbPort = 5432
 const appSecret = config.requireSecret("appSecret")
 
-const postmarkToken = config.requireSecret("postmarkToken")
+const googleSMTPPassword = config.requireSecret("googleSMTPPassword")
 
 // Configure
 
@@ -143,15 +143,31 @@ const service = new awsx.ecs.FargateService(`buho-docs-${stack}-service`, {
         },
         {
           name: "MAIL_DRIVER",
-          value: "postmark",
+          value: "smtp",
         },
         {
-          name: "POSTMARK_TOKEN",
-          value: postmarkToken,
+          name: "SMTP_HOST",
+          value: "smtp.gmail.com",
+        },
+        {
+          name: "SMTP_PORT",
+          value: "587",
+        },
+        {
+          name: "SMTP_USERNAME",
+          value: "dan@buhochile.com",
+        },
+        {
+          name: "SMTP_PASSWORD",
+          value: googleSMTPPassword,
+        },
+        {
+          name: "SMTP_SECURE",
+          value: "465",
         },
         {
           name: "MAIL_FROM_ADDRESS",
-          value: "eyal@buhochile.com", // Configure as needed
+          value: "developers@buhochile.com",
         },
         {
           name: "MAIL_FROM_NAME",
@@ -195,4 +211,3 @@ const service = new awsx.ecs.FargateService(`buho-docs-${stack}-service`, {
 export const url = pulumi.interpolate`http://${lb.loadBalancer.dnsName}`
 export const databaseEndpoint = database.endpoint
 export const redisEndpoint = pulumi.interpolate`${redis.cacheNodes[0].address}:${redis.port}`
-

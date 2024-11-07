@@ -7,5 +7,5 @@ config:
     secure: AAABAO9BwaPRJziOmLnYbg6AgC0hYB+kYClForEp5wFeIlj0FhQmApXNLWDa1Otf
   deploy-buho-docs:appSecret:
     secure: AAABAN5PkiPiEPT86hG7IxPYLXX8qK1dxtTpejzCLqOI4sWTEao1MV7SVoBV34Lo7dKZ/gGeGv2DobPnoJlQ2zDn5xbNgYbGfzqu5g==
-  deploy-buho-docs:postmarkToken:
-    secure: AAABAEXJJm6veHGsLmzmScTpJVjwLtgfV/jB39+fE1TyYZ9juGUPR+MVktk5ryucDdeGiwbuEVEo1umR/wZKUyoZUh4=
+  deploy-buho-docs:googleSMTPPassword:
+    secure: AAABAODuTLdiEvxkk0wCV8ZURMp9LyvuRzsT3VWvo2tf9TtwA46MvOQMAnI62ReXSueO
