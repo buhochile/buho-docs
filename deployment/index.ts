@@ -2,6 +2,7 @@ import * as aws from "@pulumi/aws"
 import * as awsx from "@pulumi/awsx"
 import * as pulumi from "@pulumi/pulumi"
 import { configureNetwork } from "./configureNetwork"
+import { configureS3 } from "./configureS3"
 
 const config = new pulumi.Config()
 const containerPort = config.getNumber("containerPort") || 3000
@@ -32,6 +33,21 @@ const {
   appTargetGroup,
 } = configureNetwork({ stack, dbPort })
 
+const { s3Bucket, s3AccessKeyId, s3SecretAccessKey, s3Endpoint } = configureS3({
+  stack,
+})
+
+const dbParameterGroupName = new aws.rds.ParameterGroup(
+  `buho-docs-postgres-${stack}-parameter-group`,
+  {
+    family: "postgres16",
+    parameters: [
+      { name: "log_statement", value: "all" },
+      { name: "rds.force_ssl", value: "0" },
+    ],
+  },
+)
+
 // Create an RDS instance
 const database = new aws.rds.Instance(`buho-docs-postgres-${stack}`, {
   engine: "postgres",
@@ -44,6 +60,7 @@ const database = new aws.rds.Instance(`buho-docs-postgres-${stack}`, {
   skipFinalSnapshot: true,
   vpcSecurityGroupIds: [dbSecurityGroup.id],
   dbSubnetGroupName: dbSubnetGroup.name,
+  parameterGroupName: dbParameterGroupName.name,
 })
 
 // Create Redis cluster
@@ -116,7 +133,7 @@ const service = new awsx.ecs.FargateService(`buho-docs-${stack}-service`, {
         },
         {
           name: "STORAGE_DRIVER",
-          value: "local", // or "s3" based on your needs
+          value: "s3",
         },
         {
           name: "FILE_UPLOAD_SIZE_LIMIT",
@@ -134,6 +151,30 @@ const service = new awsx.ecs.FargateService(`buho-docs-${stack}-service`, {
           name: "MAIL_FROM_NAME",
           value: "Docmost",
         },
+        {
+          name: "AWS_S3_ACCESS_KEY_ID",
+          value: s3AccessKeyId,
+        },
+        {
+          name: "AWS_S3_SECRET_ACCESS_KEY",
+          value: s3SecretAccessKey,
+        },
+        {
+          name: "AWS_S3_REGION",
+          value: aws.getRegion().then((region) => region.name),
+        },
+        {
+          name: "AWS_S3_BUCKET",
+          value: s3Bucket.id,
+        },
+        {
+          name: "AWS_S3_ENDPOINT",
+          value: s3Endpoint,
+        },
+        {
+          name: "AWS_S3_FORCE_PATH_STYLE",
+          value: "false",
+        },
       ],
     },
   },
@@ -148,3 +189,4 @@ const service = new awsx.ecs.FargateService(`buho-docs-${stack}-service`, {
 export const url = pulumi.interpolate`http://${lb.loadBalancer.dnsName}`
 export const databaseEndpoint = database.endpoint
 export const redisEndpoint = pulumi.interpolate`${redis.cacheNodes[0].address}:${redis.port}`
+
