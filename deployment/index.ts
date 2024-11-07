@@ -19,6 +19,8 @@ const dbPassword = config.requireSecret("dbPassword")
 const dbPort = 5432
 const appSecret = config.requireSecret("appSecret")
 
+const postmarkToken = config.requireSecret("postmarkToken")
+
 // Configure
 
 const {
@@ -141,15 +143,19 @@ const service = new awsx.ecs.FargateService(`buho-docs-${stack}-service`, {
         },
         {
           name: "MAIL_DRIVER",
-          value: "smtp",
+          value: "postmark",
+        },
+        {
+          name: "POSTMARK_TOKEN",
+          value: postmarkToken,
         },
         {
           name: "MAIL_FROM_ADDRESS",
-          value: "hello@example.com", // Configure as needed
+          value: "eyal@buhochile.com", // Configure as needed
         },
         {
           name: "MAIL_FROM_NAME",
-          value: "Docmost",
+          value: "Buho Docs",
         },
         {
           name: "AWS_S3_ACCESS_KEY_ID",
