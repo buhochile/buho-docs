@@ -85,5 +85,6 @@
     "patchedDependencies": {
       "react-arborist@3.4.0": "patches/react-arborist@3.4.0.patch"
     }
-  }
+  },
+  "packageManager": "pnpm@9.9.0"
 }
