@@ -10,7 +10,41 @@
 <br />
 
 > [!NOTE]  
-> Docmost is currently in **beta**. We value your feedback as we progress towards a stable release.
+> Docmost is currently in **beta**. We value your feedback as we progress towards a stable release.\
+> 
+
+## Deployment of Buho Docs
+
+This project uses Pulumi to deploy the application to AWS. Follow the steps below to deploy the application:
+
+### Prerequisites
+    Pulumi CLI: Install the Pulumi CLI from here.
+    AWS CLI: Install the AWS CLI from here.
+    Node.js: Ensure you have Node.js installed. You can download it from here.
+
+### Configuration
+
+    AWS Credentials: Configure your AWS credentials by running aws configure and providing your AWS Access Key ID, Secret Access Key, and default region. You may need Admin Credentials.
+
+Environment Variables: Create a .env file in the root directory of the project and populate it with the necessary environment variables. You can use the .env.example file as a reference.
+
+## Steps to Deploy
+
+```bash
+pulumi up
+```
+
+### Cleanup
+
+To destroy the deployed resources, run the following command:
+
+```bash
+pulumi destroy
+```
+>[!NOTE]
+> Currently this project has only one environment deployed as *prod* stack.
+>
+
 
 ## Getting started
 To get started with Docmost, please refer to our [documentation](https://docmost.com/docs).
